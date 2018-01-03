@@ -1,0 +1,169 @@
+#!/system/bin/sh
+#Create by Liguo-Chen
+#Phone number:15105163710
+#FIH phone number:579-86284
+#Update:2015 05 18
+
+alias busybox="/data/local/tmp/busybox"
+
+cd /data
+
+#create a folder to shell script result
+ShellResult_Folder=/data/ShellResult
+if test ! -e $ShellResult_Folder
+then
+mkdir $ShellResult_Folder
+fi
+
+
+#Platform type
+QC=qcom
+MTK=mt
+
+#Get monkey event file path
+if test -e /data/MKY_LOG
+then
+MKYEventFile=`busybox find /data/MKY_LOG|busybox grep mky_event`
+else
+echo Can not find the MKY_LOG folder.
+exit
+fi
+
+
+#Adjust plarform
+HardWare=`getprop ro.hardware`
+
+IMEI=null
+IMEI2=null
+
+#Get imei info via different hardware platform
+echo $HardWare|busybox grep -q $QC
+if busybox test $? -eq 0
+then
+
+#echo This is qcom platform
+IMEITotal=`getprop|busybox grep imei|busybox wc -l`
+IMEI=`getprop persist.radio.imei`
+if busybox test $IMEITotal -gt 1
+then
+IMEI2=`getprop persist.radio.imei2`
+IMEI=$IMEI\\$IMEI2
+fi
+
+SIMOperator=`getprop gsm.operator.alpha`
+
+fi
+
+echo $HardWare|busybox grep -q $MTK
+if busybox test $? -eq 0
+then
+#echo This is MTK platform
+
+if test -n /proc/imei
+then
+IMEI=`cat /proc/imei`
+fi
+if test -n /proc/imei2
+then
+IMEI2=`cat /proc/imei2`
+IMEI=$IMEI\\$IMEI2
+fi
+
+SIMTotal=`getprop|busybox grep gsm.operator.alpha|busybox wc -l`
+SIMOperator=NA
+if busybox test $SIMTotal -eq 1
+then
+SIMOperator=`getprop gsm.operator.alpha`
+else
+SIM1Operator=`getprop gsm.operator.alpha`
+SIM2Operator=`getprop gsm.operator.alpha2`
+SIMOperator=$SIM1Operator,$SIM2Operator
+fi
+
+fi
+
+#Get sim info from telephony.db
+#TelephonyDB=/data/data/com.android.providers.telephony/databases/telephony.db
+#SIMTotal=`sqlite3 $TelephonyDB "select * from siminfo"|busybox wc -l`
+#SIM=NA
+#if busybox test $SIMTotal -gt 0
+#then
+#SIM1Operator=`sqlite3 $TelephonyDB "select * from siminfo"|busybox sed -n 1p|busybox awk 'BEGIN {FS="|"} {print $2}'` 
+#SIM=$SIM1Operator
+#if busybox test $SIMTotal -eq 2
+#then
+#SIM2Operator=`sqlite3 $TelephonyDB "select * from siminfo"|busybox sed -n 2p|busybox awk 'BEGIN {FS="|"} {print $2}'` 
+#SIM=$SIM1Operator\\$SIM2Operator
+#fi
+#fi
+
+#Get DUT's HW info
+HardwareVersion=`cat /proc/baseband`
+
+#Get APR info
+APRinfoDB=/data/data/com.fihtdc.stbmonitor/databases/APR_INFO.db
+#APRinfo=`sqlite3 $APRinfoDB "select * from apr_info"`
+#APRinfo=`sqlite3 $APRinfoDB "select distinct tag,pkg_name,pkg_version_name,pgk_version_code,count from apr_info"|busybox uniq -f 0`
+APRinfo=`sqlite3 $APRinfoDB "select distinct tag,pkg_name,pkg_version_name,pgk_version_code,count from apr_info"|busybox sed 's/|/%/g'|busybox sed 's/ /\n/g'|busybox sed 's/%/@/4g'`
+#APRinfo=${APRinfo//|/%}
+
+
+#Get detail info from monkey event log
+Delay=1000
+Seed=`cat $MKYEventFile|busybox sed -n 1p|busybox awk '{print $2}'|busybox awk 'BEGIN {FS="="} {print $2}'` 
+Count=`cat $MKYEventFile|busybox sed -n 1p|busybox awk '{print $3}'|busybox awk 'BEGIN {FS="="} {print $2}'` 
+DroppedLineTotal=`cat $MKYEventFile|busybox grep Dropped|busybox wc -l`
+Dropped=`cat $MKYEventFile|busybox grep Dropped|busybox sed -n ${DroppedLineTotal}p`
+DroppedKeys=`echo $Dropped|busybox awk 'BEGIN {FS="keys"} {print $2}'|busybox awk 'BEGIN {FS="="} {print $2}'|busybox awk '{print $1}'`
+DroppedPointers=`echo $Dropped|busybox awk 'BEGIN {FS="pointers"} {print $2}'|busybox awk 'BEGIN {FS="="} {print $2}'|busybox awk '{print $1}'`
+DroppedTrackballs=`echo $Dropped|busybox awk 'BEGIN {FS="trackballs"} {print $2}'|busybox awk 'BEGIN {FS="="} {print $2}'|busybox awk '{print $1}'`
+DroppedFlips=`echo $Dropped|busybox awk 'BEGIN {FS="flips"} {print $2}'|busybox awk 'BEGIN {FS="="} {print $2}'|busybox awk '{print $1}'`
+DroppedRotations=`echo $Dropped|busybox awk 'BEGIN {FS="rotations"} {print $2}'|busybox awk 'BEGIN {FS="="} {print $2}'|busybox awk '{print $1}'`
+let DroppedTotal=$DroppedKeys+$DroppedPointers+$DroppedTrackballs+$DroppedFlips+$DroppedRotations
+DroppedRate=`echo "$DroppedTotal $Count"|busybox awk '{printf "%.2f%\n" , $1 / $2 * 100 }'`
+#echo $DroppedRate
+
+EventCountBasedMTTF=`busybox expr $Count "*" $Delay / 60000`
+MonkeyFinished="No Monkey finished"
+cat $MKYEventFile|busybox grep -q "Monkey finished"
+if busybox test $? -eq 0
+then
+MonkeyFinished="Monkey finished"
+fi
+
+#Get start time
+LastLineNumberCalendarTime=`cat $MKYEventFile|busybox grep calendar_time|busybox wc -l`
+FirstLineCalendarTime=`cat $MKYEventFile|busybox grep calendar_time|busybox sed -n 1p`
+LastLineCalendarTime=`cat $MKYEventFile|busybox grep calendar_time|busybox sed -n ${LastLineNumberCalendarTime}p`
+
+StartTime=`echo $FirstLineCalendarTime|busybox awk 'BEGIN {FS="calendar_time:"} {print $2}'|busybox awk '{print $1" "$2}'`
+Start=`echo $FirstLineCalendarTime|busybox awk 'BEGIN {FS="system_uptime:"} {print $2}'`
+Start=${Start/]/}
+EndTime=`echo $LastLineCalendarTime|busybox awk 'BEGIN {FS="calendar_time:"} {print $2}'|busybox awk '{print $1" "$2}'`
+End=`echo $LastLineCalendarTime|busybox awk 'BEGIN {FS="system_uptime:"} {print $2}'`
+End=${End/]/}
+
+Duration=`busybox expr $End - $Start`
+Duration=`busybox expr $Duration / 60000 / 60`
+if busybox test $Duration -gt 27
+then
+Duration=27
+fi
+
+#Get DUT info
+#AndroidVersion=`getprop ro.build.version.release`
+VersionInfo=`cat /system/etc/fver|busybox grep "MLF,"|busybox awk 'BEGIN {FS=","} {print $2}'|busybox awk 'BEGIN {FS="."} {print $1}'`
+
+#Declare log file name
+MonkeyResult=$ShellResult_Folder/MonkeyResultAnalyse_"$VersionInfo"_`date +%m-%d-%H-%M-%S`.xls
+
+echo "IMEI	HW	SIM	Seed	Accumulative event counts 	Total Dropped Event	Event drop rate	Event Count Based MTTF	Note	Force close Info	Location	Result	Tester	SW Version	Start time	End time	Start	End	Duration">>$MonkeyResult
+
+echo "$IMEI	$HardwareVersion	null	$Seed	$Count 	$DroppedTotal	$DroppedRate	$EventCountBasedMTTF	$MonkeyFinished	APRinfo	Location	Result	Tester	$VersionInfo	$StartTime	$EndTime	$Start	$End	$Duration">>$MonkeyResult
+
+echo $APRinfo>>$MonkeyResult
+
+
+
+
+

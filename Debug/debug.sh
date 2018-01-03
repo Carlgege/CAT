@@ -1,0 +1,1 @@
+source /data/local/tmp/Template.sh;Creater=Carl;TestPrecondition="1. WLAN connect;2. BT paried";TestStep="1. Launch Settings;2. Enable/Disable WLAN";Repeat=$1;for i in $(busybox seq ${Repeat:-1});do echo `DATE` ${0##*/} Current Time is:$i>>$DetailLog;done;LogPass;

@@ -1,0 +1,13 @@
+C:\Documents and Settings\Administrator>ping 192.168.1.1|find "TTL="
+
+C:\Documents and Settings\Administrator>echo %errorlevel%
+1
+
+C:\Documents and Settings\Administrator>ping 127.1|find "TTL="
+Reply from 127.0.0.1: bytes=32 time<1ms TTL=64
+Reply from 127.0.0.1: bytes=32 time<1ms TTL=64
+Reply from 127.0.0.1: bytes=32 time<1ms TTL=64
+Reply from 127.0.0.1: bytes=32 time<1ms TTL=64
+
+C:\Documents and Settings\Administrator>echo %errorlevel%
+0

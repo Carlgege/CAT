@@ -1,0 +1,362 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+
+    <title>Test Report</title>
+    <meta charset="utf-8">
+
+    <style type="text/css">
+        body {
+            font: 100% "Courier New", Courier, monospace;
+        }
+
+        table {
+            border-collapse: collapse;
+            -webkit-box-shadow: 3px 3px 7px #055584;
+            -moz-box-shadow: 3px 3px 7px #055584;
+            box-shadow: 3px 3px 7px #055584;
+        }
+
+        caption {
+            color: blue;
+            font-size: 2em;
+            font-weight: bold;
+            margin-botton: .5em;
+            text-shadow: 1px 1px 1px #c0e0f2;
+        }
+
+        tr, th, td {
+            font-size: 1em;
+            padding: .5em .75em;
+            border: 1px solid #000;
+
+            text-align:center;
+        }
+
+        thead {
+            font-size: 1.5em;
+            color: white;
+            background: blue;
+
+        }
+
+    </style>
+
+    <script>
+	    var deviceInfo = {};
+			var testResult = [
+			];
+			var passTCTotal = 0;
+			var failTCTotal = 0;
+			var usedTimeTotal = "";
+			var passRate = "";
+			
+			function getTestResult() {
+				
+				//alert(JSON.stringify(testResult));
+				document.getElementById("uploadresult").value = JSON.stringify(testResult);
+				//alert(document.getElementById("uploadresult").value);
+				document.getElementById("uploaddeviceinfo").value = JSON.stringify(deviceInfo);
+				
+			}
+			
+			function init() {
+			    //get deviceinfo from the variable
+			    var deviceinfo = document.getElementById("deviceinfo");
+			
+			    //get result detail from the varaible testResult
+			    var resultbody = document.getElementById("resultbody");
+			    //var resultbody = document.getElementsByTagName("resultbody")[0];
+			
+			    var resultsummary = document.getElementById("resultsummary");
+			
+			    for (var i = deviceinfo.rows.length - 1; i > -1; i--) {
+			        deviceinfo.deleteRow(i);
+			    }
+			
+			    for (var i = resultsummary.rows.length - 1; i > -1; i--) {
+			        resultsummary.deleteRow(i);
+			        passTCTotal = 0;
+			        failTCTotal = 0;
+			        usedTimeTotal = "";
+			        passRate = "";
+			     }
+			
+			    for (var i = resultbody.rows.length - 1; i > -1; i--) {
+			        resultbody.deleteRow(i);
+			    }
+			
+			    var tr = document.createElement("tr");
+			    tr.type = "tr";
+			    deviceinfo.appendChild(tr);
+			
+			    var ProductName = document.createElement("td");
+			    ProductName.innerHTML = deviceInfo.ProductName;
+			    tr.appendChild(ProductName);
+			
+			    var SN = document.createElement("td");
+			    SN.innerHTML = deviceInfo.SN;
+			    tr.appendChild(SN);
+			
+			    var SW = document.createElement("td");
+			    SW.innerHTML = deviceInfo.SW;
+			    tr.appendChild(SW);
+			
+			    var SKUID = document.createElement("td");
+			    SKUID.innerHTML = deviceInfo.SKUID;
+			    tr.appendChild(SKUID);
+			
+			    var androidPlatformVersion = document.createElement("td");
+			    androidPlatformVersion.innerHTML = deviceInfo.androidPlatformVersion;
+			    tr.appendChild(androidPlatformVersion);
+			
+			    var CPUModel = document.createElement("td");
+			    CPUModel.innerHTML = deviceInfo.CPUModel;
+			    tr.appendChild(CPUModel);
+			
+			    var SIMOperator = document.createElement("td");
+			    SIMOperator.innerHTML = deviceInfo.SIMOperator;
+			    tr.appendChild(SIMOperator);
+			
+			    var resultselect = document.getElementById("resultselect");
+			
+			    for (var i = 0; i < testResult.length; i++) {
+			
+			        //if user filter result by Fail, then skip the result of Pass
+			        if (resultselect.value === "Fail") {
+			            if (testResult[i].TCResult === "Pass") {
+			                continue;
+			            }
+			        }
+			
+			        //if user filter result by Pass, then skip the result of Fail
+			        if (resultselect.value === "Pass") {
+			            if (testResult[i].TCResult === "Fail") {
+			                continue;
+			            }
+			        }
+			
+			        var tr = document.createElement("tr");
+			        tr.type = "tr";
+			        resultbody.appendChild(tr);
+			
+			        var tcDate = document.createElement("td");
+			        tcDate.innerHTML = testResult[i].TCDate;
+			        tr.appendChild(tcDate);
+			
+			        var tcName = document.createElement("td");
+			        tcName.innerHTML = testResult[i].TCName;
+					tcName.title = testResult[i].TCPrecondition + "\n" + testResult[i].TCStep + "\n" + testResult[i].Creater;
+			        tr.appendChild(tcName);
+			
+			        var tcRepeat = document.createElement("td");
+			        tcRepeat.innerHTML = testResult[i].TCRepeat;
+			        tr.appendChild(tcRepeat);
+			
+			        var tcResult = document.createElement("td");
+			        tcResult.innerHTML = testResult[i].TCResult;
+			        if (testResult[i].TCResult === "Pass") {
+			            passTCTotal++;
+			        } else if (testResult[i].TCResult === "Fail") {
+			            failTCTotal++;
+			            tcResult.style.color = "red";
+			            tcResult.style.fontSize = "1.2em";
+			            tcResult.style.fontWeight = "bold";
+			        }
+			        tr.appendChild(tcResult);
+			
+			        var tcDuration = document.createElement("td");
+			        tcDuration.innerHTML = testResult[i].TCDuration;
+			        tr.appendChild(tcDuration);
+			        //var time_ms = testResult[i].TCDuration.
+			        //usedTimeTotal = usedTimeTotal + testResult[i].TCDuration
+			
+			        var tcFailReason = document.createElement("td");
+			        tcFailReason.innerHTML = testResult[i].TCFailReason;
+			        tr.appendChild(tcFailReason);
+			
+			        var tcFailScreenshot = document.createElement("td");
+			        if (testResult[i].TCResult === "Pass") {
+			        tcFailScreenshot.innerHTML = testResult[i].TCFailScreenshot;
+			            //tr.appendChild(tcFailScreenshot);
+			        } else if (testResult[i].TCResult === "Fail") {
+			            var tcFailScreenshotLink = document.createElement("a");
+			            tcFailScreenshotLink.innerHTML = testResult[i].TCFailScreenshot;
+			            tcFailScreenshotLink.href = "../Image/" + testResult[i].TCFailScreenshot + ".png";
+			            tcFailScreenshot.appendChild(tcFailScreenshotLink);
+			        }
+			        tr.appendChild(tcFailScreenshot);
+			
+			    }
+			
+			    var summarybody = document.getElementById("resultsummary");
+			
+			    var tr_summarybody = document.createElement("tr");
+			    tr_summarybody.type = "tr";
+			    summarybody.appendChild(tr_summarybody);
+			
+			    var tcTotal_summarybody = document.createElement("td");
+			    tcTotal_summarybody.innerHTML = "" + testResult.length;
+			    tr_summarybody.appendChild(tcTotal_summarybody);
+			
+			    var passTotal_summarybody = document.createElement("td");
+			    passTotal_summarybody.innerHTML = "" + passTCTotal;
+			    tr_summarybody.appendChild(passTotal_summarybody);
+			
+			    var failTotal_summarybody = document.createElement("td");
+			    failTotal_summarybody.innerHTML = "" + failTCTotal;
+			    tr_summarybody.appendChild(failTotal_summarybody);
+			
+			    var usedTimeTotal_summarybody = document.createElement("td");
+			    var startTime = testResult[0].TCDate;
+			    var endTime = testResult[testResult.length-1].TCDate;
+			    //var start_year = startTime.substring(0,4);
+			    //var start_month = startTime.substring(5,7);
+			    //var start_day = startTime.substring(8,10);
+			    //var start_hour = startTime.substring(11,13);
+			    //var start_minute = startTime.substring(14,16);
+			    //var start_second = startTime.substring(17,19);
+			
+			    //startTime = startTime.substring(0,4) + "-" + startTime.substring(5,7) + "-" + startTime.substring(8,10) + " " + startTime.substring(11,13) + ":" + startTime.substring(14,16) + ":" + startTime.substring(17,19);
+			    //endTime = endTime.substring(0,4)  + "-" + endTime.substring(5,7) + "-" + endTime.substring(8,10) + " " + endTime.substring(11,13) + ":" + endTime.substring(14,16) + ":" + endTime.substring(17,19);
+			
+			    //console.log("start time:"+startTime);
+			    //console.log("end time:"+endTime);
+			    //console.log(getDateDiff(startTime, endTime, "hour"));
+			    var usedTimeTotal_hour = getDateDiff(startTime, endTime, "hour");
+			    var usedTimeTotal_minute = getDateDiff(startTime, endTime, "minute");
+			    var firstTestCaseDuration = testResult[0].TCDuration;
+			    var firstTestCase_hour = 0;
+			    var firstTestCase_minute = 0;
+			
+			    if (firstTestCaseDuration.indexOf("D") > 0) {
+			        firstTestCase_hour = firstTestCase_hour + firstTestCaseDuration.substring(0, firstTestCaseDuration.indexOf("D")) * 24;
+			    }
+			    if (firstTestCaseDuration.indexOf("H") > 0) {
+			        firstTestCase_hour = firstTestCase_hour + firstTestCaseDuration.substring(0, firstTestCaseDuration.indexOf("H"));
+			    }
+			    if (firstTestCaseDuration.indexOf("M") > 0) {
+			        firstTestCase_minute = firstTestCaseDuration.substring(0, firstTestCaseDuration.indexOf("M"));
+			    }
+			
+			    usedTimeTotal_summarybody.innerHTML = (usedTimeTotal_hour + parseInt(firstTestCase_hour)) + "H" + (usedTimeTotal_minute - usedTimeTotal_hour * 60 + parseInt(firstTestCase_minute) ) + "M";
+			    tr_summarybody.appendChild(usedTimeTotal_summarybody);
+			
+			    var passRate_summarybody = document.createElement("td");
+			    passRate_summarybody.innerHTML = (passTCTotal / testResult.length).toFixed(2) * 100 + "%";
+			    passRate_summarybody.style.color = "green";
+			    passRate_summarybody.style.fontSize = "1.4em";
+			    passRate_summarybody.style.fontWeight = "bold";
+			    passRate_summarybody.colSpan = 3;
+			    tr_summarybody.appendChild(passRate_summarybody);
+			
+			}
+			
+			function getDateDiff(startTime, endTime, diffType) {
+			
+			    startTime = startTime.replace(/\-/g, "/");
+			    endTime = endTime.replace(/\-/g, "/");
+			    diffType = diffType.toLowerCase();
+			    var sTime = new Date(startTime);
+			    var eTime = new Date(endTime);
+			            
+			    var divNum = 1;
+			    switch (diffType) {
+			        case "second":
+			            divNum = 1000;
+			            break;
+			        case "minute":
+			            divNum = 1000 * 60;
+			            break;
+			        case "hour":
+			            divNum = 1000 * 3600;
+			            break;
+			        case "day":
+			            divNum = 1000 * 3600 * 24;
+			            break;
+			        default:
+			            break;
+			    }
+			    return parseInt((eTime.getTime() - sTime.getTime()) / parseInt(divNum));
+			}
+			
+			window.onload = init;
+
+    </script>
+    
+
+</head>
+
+<body>
+
+<table>
+    <caption>Test Result</caption>
+    <thead>
+    <tr>
+        <th scope="col">ProductName</th>
+        <th scope="rowgroup" title="Serial Number">SN</th>
+        <th scope="col" title="Software Version">SW</th>
+        <th scope="col">SKUID</th>
+        <th scope="col" title="Android Version">Android</th>
+        <th scope="col">CPUModel</th>
+        <th scope="col">SIMOperator</th>
+    </tr>
+    </thead>
+    <tbody id="deviceinfo">
+
+    </tbody>
+    <thead>
+    <tr>
+        <th scope="rowgroup">Total</th>
+        <th scope="col">Pass</th>
+        <th scope="col">Fail</th>
+        <th scope="col">Used Time</th>
+        <th scope="col" colspan="3">Pass rate</th>
+    </tr>
+
+    </thead>
+    <tbody id="resultsummary">
+
+    </tbody>
+
+
+    <thead>
+    <tr>
+        <th scope="rowgroup">Date</th>
+        <th scope="col">TC</th>
+        <th scope="col">Repeat</th>
+        <th scope="col">Result
+            <select id="resultselect" name="resultselect" onchange="init()">
+                <option value="All">All</option>
+                <option value="Pass">Pass</option>
+                <option value="Fail">Fail</option>
+            </select>
+        </th>
+        <th scope="col">Duration</th>
+        <th scope="col">FailReason</th>
+        <th scope="col">Screenshot</th>
+    </tr>
+    </thead>
+
+    <tbody id="resultbody">
+
+    </tbody>
+
+</table>
+
+<br/>
+
+<!-- <button onclick="clearResult()">Clear</button> -->
+
+<form method="post" action="http://zzdcdqa/uploadtestdata.php">
+
+		<input type="hidden" name="uploadresult" id="uploadresult">
+		<input type="hidden" name="uploaddeviceinfo" id="uploaddeviceinfo">
+		
+
+		<input type="submit" value="upload" onclick="getTestResult()">
+</form>
+
+
+</body>
+</html>

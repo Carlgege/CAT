@@ -1,0 +1,3 @@
+IMEI	HW	SIM	Seed	Accumulative event counts 	Total Dropped Event	Event drop rate	Event Count Based MTTF	Note	Force close Info	Location	Result	Tester	SW Version	Start time	End time	Start	End	Duration
+355714060004022\355714062504029	HW	,	1263426469549	300000 	1721	0.57%	5000	Monkey finished	APRinfo	Location	Result	Tester	ZD1-024K-0-00WW-A02	2010-01-01 08:17:44.195	2010-01-02 14:04:15.329	446722	107637825	27
+SYSTEM_BOOT%N/A%N/A%N/A@5 SYSTEM_LAST_KMSG%N/A%N/A%N/A@1 system_app_crash%com.runmit.gallery%1.2.0.48%17@10
